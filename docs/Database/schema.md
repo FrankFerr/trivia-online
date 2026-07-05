@@ -20,13 +20,13 @@ Table users {
 
 Table refresh_tokens {
   id uuid [pk]
+  id_user uuid [not null, ref: > users.id]
   token varchar(255) [not null, unique]
   id_jwt uuid [not null]
   creation_date date [not null]
   expiry_date date [not null]
   is_used bool [not null, default: false]
   is_revoked bool [not null, default: false]
-  id_user uuid [not null, ref: > users.id]
 }
 
 Table games {
