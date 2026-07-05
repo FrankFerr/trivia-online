@@ -1,4 +1,6 @@
 ```DBML
+// Quiz/Trivia Game Platform — DBML for dbdiagram.io
+
 enum games_type {
   singleplayer
   multiplayer
@@ -8,6 +10,11 @@ enum difficulty {
   easy
   medium
   hard
+}
+
+enum answer_status {
+  answered
+  timeout
 }
 
 Table users {
@@ -27,29 +34,6 @@ Table refresh_tokens {
   expiry_date date [not null]
   is_used bool [not null, default: false]
   is_revoked bool [not null, default: false]
-}
-
-Table games {
-  id uuid [pk]
-  code varchar(20) [not null, unique]
-  description varchar(80)
-  created_at timestamp [not null, default: `CURRENT_DATE`]
-  type games_type [not null]
-  difficulty difficulty [not null]
-  password varchar(80)
-  number_of_players smallint [not null, default: 2]
-  number_of_questions smallint [not null]
-  answer_timeout_hours smallint [not null, default: 1]
-  started_at timestamp
-  ended_at timestamp
-}
-
-Table games_users {
-  id uuid [pk]
-  id_user uuid [not null, ref: > users.id]
-  id_game uuid [not null, ref: > games.id]
-  is_owner bool [not null]
-  score integer [default: 0]
 }
 
 Table categories {
@@ -74,25 +58,60 @@ Table questions_answers {
   is_correct bool [not null]
 }
 
+Table games {
+  id uuid [pk]
+  code varchar(20) [not null, unique]
+  description varchar(80)
+  created_at timestamp [not null, default: "CURRENT_DATE"]
+  type games_type [not null]
+  difficulty difficulty
+  password varchar(80)
+  number_of_players smallint [not null, default: 2]
+  number_of_questions smallint [not null]
+  answer_timeout_hours smallint [not null, default: 1]
+  current_game_question_id uuid
+  started_at timestamp
+  ended_at timestamp
+}
+
+Table games_users {
+  id uuid [pk]
+  id_user uuid [not null, ref: > users.id]
+  id_game uuid [not null, ref: > games.id]
+  is_owner bool [not null]
+  score integer [default: 0]
+}
+
 Table games_questions {
   id uuid [pk]
   id_game uuid [not null, ref: > games.id]
-  id_question uuid [not null, ref: > questions.id]
+  description_category varchar(30) [not null]
+  text varchar(150) [not null]
+  explanation varchar(255)
+  difficulty difficulty [not null]
   position smallint [not null]
+}
+
+Table games_questions_answers {
+  id uuid [pk]
+  id_game_question uuid [not null, ref: > games_questions.id]
+  text varchar(255) [not null]
+  is_correct bool [not null]
 }
 
 Table games_users_answers {
   id uuid [pk]
   id_game_user uuid [not null, ref: > games_users.id]
   id_game_question uuid [not null, ref: > games_questions.id]
-  id_answer uuid [not null, ref: > questions_answers.id]
-  answered_at timestamp
+  id_game_question_answer uuid [not null, ref: > games_questions_answers.id]
+  answered_at timestamp [default: "CURRENT_DATE"]
+  status answer_status
 }
 
 Table games_history {
   id uuid [pk]
   description_game varchar(80)
-  created_at timestamp [default: `CURRENT_DATE`]
+  created_at timestamp [default: "CURRENT_DATE"]
   type games_type
   difficulty difficulty
   number_of_players smallint
@@ -111,4 +130,5 @@ Table games_history_users {
   score smallint
   is_winner bool
 }
+
 ```
