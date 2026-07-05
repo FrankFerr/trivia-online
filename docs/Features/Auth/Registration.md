@@ -3,15 +3,19 @@
 
 ## FrontEnd - page structure
 ---
+### Layout
+- navbar
+- login form
+- registration form
+- footer
 
-- [ ] **Registration**
-	- **Form fields**
-		- username
-		- email
-		- password
+### Functionality
+- [ ] **Registration Form**
+	- **Fields**
+		- see [[#RegistrationRequest]]
 		- confirm password
 	- **Actions**
-		- Sign up (calls [[#**HTTP POST** api/auth/register|register endpoint]])
+		- Sign up (calls [[#^edfabf|register]])
 		- switch to login form
 	- **Visuals feedback**
 		- show validation fields error message
@@ -22,34 +26,28 @@
 		- email length and format
 		- password length and format
 		- confirm password must match password
--  [ ] Redirect
-	- if Sign up action returns 200 OK, redirect user to the dashboard page
-
-## Endpoints
----
-### **HTTP POST** api/auth/register
-```json
-{
-	username: string,
-	email: string,
-	password: string
-}
-```
-
+	- **On Actions Completed**
+		- Sign up action returns 200 OK -> redirect user to the dashboard page
+			- parameter: /{user_id}
 
 ## BackEnd
 ---
-- [ ]  api/auth/register
-	- AuthHandler
-		- data validation -> 400 BadRequest with error message
-		- cheks if username and email already exists -> 400 BadRequest with error message
-		- create a hash for password
-		- save user in ***users*** table
-		- create access and refresh token and save refresh_token in ***refresh_tokens*** table
-		- return [[#RegistrationResponse]]
-	- based on Client-Type:
-		- Mobile (TBD): return 200 OK [[#RegistrationResponse]]
-		- Web: set cookie HttpOnly for access_token and refresh_token and return 200 OK
+- [ ] **POST api/auth/register** ^edfabf
+	- **Request**
+		- [[#RegistrationRequest]]
+	- **Response**
+		- [[#RegistrationResponse]]
+	- **Execution Flow**
+		- AuthHandler
+			- data validation -> 400 BadRequest with error message
+			- cheks if username and email already exists -> 400 BadRequest with error message
+			- create a hash for password
+			- save user in ***users*** table
+			- create access and refresh token and save refresh_token in ***refresh_tokens*** table
+			- return [[#RegistrationResponse]]
+		- based on Client-Type:
+			- Mobile (TBD): return 200 OK [[#RegistrationResponse]]
+			- Web: set cookie HttpOnly for access_token and refresh_token and return 200 OK
 
 ## DTO
 ___
@@ -57,9 +55,9 @@ ___
 ```c#
 public class RegistrationRequest
 {
-	public string Username { get; set; }
-	public string Email { get; set; }
-	public string Password { get; set; }
+	public string Username;
+	public string Email;
+	public string Password;
 }
 ```
 
@@ -67,7 +65,7 @@ public class RegistrationRequest
 ```c#
 public class RegistrationResponse
 {
-	public string AccessToken { get; set; }
-	public string RefreshToken { get; set; }
+	public string AccessToken;
+	public string RefreshToken;
 }
 ```

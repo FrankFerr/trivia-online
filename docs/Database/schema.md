@@ -68,7 +68,7 @@ Table games {
   password varchar(80)
   number_of_players smallint [not null, default: 2]
   number_of_questions smallint [not null]
-  answer_timeout_hours smallint [not null, default: 1]
+  answer_timeout_minutes smallint [not null, default: 1]
   current_game_question_id uuid
   started_at timestamp
   ended_at timestamp
