@@ -34,12 +34,14 @@
 
 ## BackEnd
 ---
-- [ ] AuthHandler
-	- data validation (blank fields) -> 401 Unauthorized with error message
-	- check if username exists -> 401 Unauthorized with error message
-	- check if hashed password matches saved password -> 401 Unauthorized with error message
-	- generate access_token and refresh_token
-	- save refresh_token in ***refresh_tokens***
+- [ ] api/auth/login
+	- AuthHandler
+		- data validation (blank fields) -> 401 Unauthorized with error message
+		- check if username exists -> 401 Unauthorized with error message
+		- check if hashed password matches saved password -> 401 Unauthorized with error message
+		- generate access_token and refresh_token
+		- save refresh_token in ***refresh_tokens***
+		- return [[#LoignResponse]]
 	- based on Client-Type:
 		- Mobile (TBD): return 200 OK [[#LoignResponse]]
 		- Web: set cookie HttpOnly for access_token and refresh_token and return 200 OK

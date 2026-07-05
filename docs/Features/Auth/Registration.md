@@ -23,7 +23,7 @@
 		- password length and format
 		- confirm password must match password
 -  [ ] Redirect
-	- if Registration action returns 200 OK, redirect user to the dashboard page
+	- if Sign up action returns 200 OK, redirect user to the dashboard page
 
 ## Endpoints
 ---
@@ -39,12 +39,14 @@
 
 ## BackEnd
 ---
-- [ ] AuthHandler
-	- data validation -> 400 BadRequest with error message
-	- cheks if username and email already exists -> 400 BadRequest with error message
-	- create a hash for password
-	- save user in ***users*** table
-	- create access and refresh token and save refresh_token in ***refresh_tokens*** table
+- [ ]  api/auth/register
+	- AuthHandler
+		- data validation -> 400 BadRequest with error message
+		- cheks if username and email already exists -> 400 BadRequest with error message
+		- create a hash for password
+		- save user in ***users*** table
+		- create access and refresh token and save refresh_token in ***refresh_tokens*** table
+		- return [[#RegistrationResponse]]
 	- based on Client-Type:
 		- Mobile (TBD): return 200 OK [[#RegistrationResponse]]
 		- Web: set cookie HttpOnly for access_token and refresh_token and return 200 OK
