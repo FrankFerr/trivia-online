@@ -15,7 +15,9 @@
 ### Functionality
 
 - [ ] **On enter**
-	- Initialize listener to the event *OnNewGameCreated*
+	- SignalR -> Initialize listener to the event [[#^ffeabc|OnNewGameCreated]]
+	- SignalR -> Initialize listener to the event [[#^0fcaa9|OnPendingGamesUpdated]]
+	- SignalR -> invoke *JoinDashboardGroup*
 	- calls [[#^c84106|pending games]] to retrieve pending games to join
 - [ ] **Page**
 	- [ ] **Create new game button**
@@ -33,13 +35,29 @@
 				- create button return 200 OK -> redirect to the lobby page
 					- path parameter: /{new_game_id}
 
+	- [ ] **Join by code button**
+		- open modal to insert code
+			- **Fields**
+				- see [[#JoinGameRequest]] DTO
+			- **Actions**
+				- join button (calls)
+
+- [ ] **SignalR Events**
+	- [ ] **OnNewGameCreated** ^ffeabc
+		- **Event Data**
+			- [[#OnNewGameResponse]]
+		- **Execution Flow**
+			- add new game to the list, ignore if already exists
+	- [ ] **OnPendingGamesUpdated** ^0fcaa9
+		- 
+
 ## BackEnd
 ---
 - [ ] **GET api/games/pending** ^c84106
 	- **Response**
 		- [[#PendingGamesResponse]]
 	- **Execution Flow**
-		- DashboardHandler
+		- MediatR -> DashboardHandler
 			- retrieve pending games from DB
 		- return 200 OK
 
@@ -48,12 +66,28 @@
 		- [[#NewGameRequest]]
 	- **Response**
 		- [[#NewGameResponse]]
-	- **Execution Flow
+	- **Execution Flow**
+		- MediatR -> DashboardHandler
+			- validate required fields
+			- create new game
+			- return ID new game
+		- SignalR -> invoke [[#^d6d92d|OnNewGameCreated]] ([[#OnNewGameCreatedEventData]])
+		- return [[#NewGameResponse]]
+
+- [ ] **SignalR Methods**
+	- [ ] **JoinDashboardGroup**
+		- **Execution Flow**
+			- add user to the DashboardGroup
+	- [ ] **OnNewGameCreated** ^d6d92d
+		- **Event Data**
+			- [[#OnNewGameCreatedEventData]]
+		- **Execution Flow**
+			- notify the dashboardGroup with new game data
 
 ## DTO
 ---
 
-### PendingGamesResponse - List Of
+### PendingGamesResponse - List
 ```c#
 public class PendingGamesResponse
 {
@@ -83,5 +117,26 @@ public class PendingGamesResponse
 ```c#
 {
 	public Guid Id;
+}
+```
+
+### JoinGameRequest
+```c#
+public class JoinGameRequest
+{
+	public string code;
+}
+```
+
+### OnNewGameCreatedEventData
+```c#
+public class OnNewGameCreatedEventData
+{
+	public Guid Id;
+	public string Description;
+	public DateOnly CreatedAt;
+	public EDifficulty Difficulty;
+	public int NumberOfQuestions;
+	public int AnswerTimeoutMinutes;
 }
 ```
