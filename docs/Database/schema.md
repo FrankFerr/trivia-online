@@ -1,9 +1,13 @@
 ```DBML
-// Quiz/Trivia Game Platform — DBML for dbdiagram.io
-
 enum games_type {
   singleplayer
   multiplayer
+}
+
+enum games_status {
+  pending
+  started
+  ended
 }
 
 enum difficulty {
@@ -21,6 +25,7 @@ Table users {
   id uuid [pk]
   username varchar(30) [not null, unique]
   email varchar(50) [not null, unique]
+  password varchar(255) [not null]
   is_active bool [not null, default: true]
   created_at timestamp [not null]
 }
@@ -64,11 +69,12 @@ Table games {
   description varchar(80)
   created_at timestamp [not null, default: "CURRENT_DATE"]
   type games_type [not null]
+  status games_status [not null, default: pending]
   difficulty difficulty
   password varchar(80)
   number_of_players smallint [not null, default: 2]
   number_of_questions smallint [not null]
-  answer_timeout_minutes smallint [not null, default: 1]
+  answer_timeout_minutes smallint [not null, default: 720]
   current_game_question_id uuid
   started_at timestamp
   ended_at timestamp
@@ -125,10 +131,8 @@ Table games_history_users {
   id uuid [pk]
   id_games_history uuid [not null, ref: > games_history.id]
   id_user uuid [not null, ref: > users.id]
-  username varchar(30)
   number_of_correct_answers smallint
   score smallint
   is_winner bool
 }
-
 ```

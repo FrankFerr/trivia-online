@@ -17,7 +17,7 @@
 - [ ] **On enter**
 	- SignalR -> Initialize listener to the event [[#^ffeabc|OnNewGameCreated]]
 	- SignalR -> Initialize listener to the event [[#^0fcaa9|OnPendingGamesUpdated]]
-	- SignalR -> invoke *JoinDashboardGroup*
+	- SignalR -> invoke [[#^db6121|JoinDashboardGroup]]
 	- calls [[#^c84106|pending games]] to retrieve pending games to join
 - [ ] **Page**
 	- [ ] **Create new game button**
@@ -36,11 +36,20 @@
 					- path parameter: /{new_game_id}
 
 	- [ ] **Join by code button**
-		- open modal to insert code
+		- insert code in a minimal form
 			- **Fields**
 				- see [[#JoinGameRequest]] DTO
 			- **Actions**
-				- join button (calls)
+				- join button
+					- retreive games by code ([[#^c84106|api/games]])
+					- calls [[#^937ced|api/games/{id}/join]]
+			- **Visuals feedback**
+				- show validation fields error message
+			- **Validations**
+				- validation for required fields
+			- **On Complete Actions**
+				- join button return 200 OK -> redirect to the lobby page
+					- path parameter: /{new_game_id}
 
 - [ ] **SignalR Events**
 	- [ ] **OnNewGameCreated** ^ffeabc
@@ -49,17 +58,16 @@
 		- **Execution Flow**
 			- add new game to the list, ignore if already exists
 	- [ ] **OnPendingGamesUpdated** ^0fcaa9
-		- 
+		- TODO
 
 ## BackEnd
 ---
-- [ ] **GET api/games/pending** ^c84106
+- [ ] **GET api/games**^c84106
 	- **Response**
-		- [[#PendingGamesResponse]]
+		- [[#GameResponse - List]]
 	- **Execution Flow**
 		- MediatR -> DashboardHandler
-			- retrieve pending games from DB
-		- return 200 OK
+			- retrieve games from DB
 
 - [ ] **POST api/games** ^a51427
 	- **Request**
@@ -71,30 +79,53 @@
 			- validate required fields
 			- create new game
 			- return ID new game
-		- SignalR -> invoke [[#^d6d92d|OnNewGameCreated]] ([[#OnNewGameCreatedEventData]])
-		- return [[#NewGameResponse]]
+		- SignalR -> invoke [[#^d6d92d|NotifyGameCreated]] ([[#OnNewGameCreatedEventData]])
+
+- [ ] **POST api/games/{id}/join** ^937ced
+	- **Request**
+		- [[#JoinGameRequest]]
+	- **Response**
+		- [[#JoinGameResponse]]
+	- **Execution Flow**
+		- MediatR -> DashboardHandler
+			- validate required field
+			- game doesn't exists -> 404 Not Found, or is full -> 409 Conflict
+			- join user to game (DB)
+		- SignalR -> invoke [[#^b03fb7|NotifyJoinedGame]] ([[#OnGameUpdatedEventData]])
 
 - [ ] **SignalR Methods**
-	- [ ] **JoinDashboardGroup**
+	- [ ] **JoinDashboardGroup** ^db6121
 		- **Execution Flow**
 			- add user to the DashboardGroup
-	- [ ] **OnNewGameCreated** ^d6d92d
-		- **Event Data**
+
+	- [ ] **NotifyGameCreated** ^d6d92d
+		- **Parameters**
 			- [[#OnNewGameCreatedEventData]]
 		- **Execution Flow**
 			- notify the dashboardGroup with new game data
 
+	- [ ] **NotifyJoinedGame** ^b03fb7
+		- **Parameters**
+			- [[#OnGameUpdatedEventData]]
+			- string ConnectionId
+		- **Execution Flow**
+			- remove user from dashboard group
+			- add user to game group
+			- notify dushboard group with updated data
+
+
 ## DTO
 ---
 
-### PendingGamesResponse - List
+### GameResponse - List
 ```c#
-public class PendingGamesResponse
+public class GameResponse
 {
 	public Guid Id;
 	public string Description;
 	public DateOnly CreatedAt;
 	public EDifficulty Difficulty;
+	public int NumberOfPlayer;
 	public int NumberOfQuestions;
 	public int AnswerTimeoutMinutes;
 }
@@ -124,7 +155,15 @@ public class PendingGamesResponse
 ```c#
 public class JoinGameRequest
 {
-	public string code;
+	public string ConnectionId;
+}
+```
+
+### JoinGameResponse
+```c#
+public class JoinGameResponse
+{
+	public Guid Id;
 }
 ```
 
@@ -138,5 +177,14 @@ public class OnNewGameCreatedEventData
 	public EDifficulty Difficulty;
 	public int NumberOfQuestions;
 	public int AnswerTimeoutMinutes;
+}
+```
+
+### OnGameUpdatedEventData
+```c#
+public class OnGameUpdatedEventData
+{
+	public Guid Id;
+	public int NumberOfPlayer;
 }
 ```
