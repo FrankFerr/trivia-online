@@ -1,10 +1,10 @@
 ```DBML
-enum games_type {
+enum matches_type {
   singleplayer
   multiplayer
 }
 
-enum games_status {
+enum matches_status {
   pending
   started
   ended
@@ -14,6 +14,7 @@ enum difficulty {
   easy
   medium
   hard
+  progressive
 }
 
 enum answer_status {
@@ -63,34 +64,35 @@ Table questions_answers {
   is_correct bool [not null]
 }
 
-Table games {
+Table matches {
   id uuid [pk]
   code varchar(20) [not null, unique]
   description varchar(80)
   created_at timestamp [not null, default: "CURRENT_DATE"]
-  type games_type [not null]
-  status games_status [not null, default: pending]
+  type matches_type [not null]
+  status matches_status [not null, default: "pending"]
   difficulty difficulty
   password varchar(80)
   number_of_players smallint [not null, default: 2]
   number_of_questions smallint [not null]
   answer_timeout_minutes smallint [not null, default: 720]
-  current_game_question_id uuid
+  current_match_question_id uuid
+  updated_at timestamp
   started_at timestamp
   ended_at timestamp
 }
 
-Table games_users {
+Table matches_users {
   id uuid [pk]
   id_user uuid [not null, ref: > users.id]
-  id_game uuid [not null, ref: > games.id]
-  is_owner bool [not null]
+  id_match uuid [not null, ref: > matches.id]
+  is_host bool [not null]
   score integer [default: 0]
 }
 
-Table games_questions {
+Table matches_questions {
   id uuid [pk]
-  id_game uuid [not null, ref: > games.id]
+  id_match uuid [not null, ref: > matches.id]
   description_category varchar(30) [not null]
   text varchar(150) [not null]
   explanation varchar(255)
@@ -98,27 +100,27 @@ Table games_questions {
   position smallint [not null]
 }
 
-Table games_questions_answers {
+Table matches_questions_answers {
   id uuid [pk]
-  id_game_question uuid [not null, ref: > games_questions.id]
+  id_match_question uuid [not null, ref: > matches_questions.id]
   text varchar(255) [not null]
   is_correct bool [not null]
 }
 
-Table games_users_answers {
+Table matches_users_answers {
   id uuid [pk]
-  id_game_user uuid [not null, ref: > games_users.id]
-  id_game_question uuid [not null, ref: > games_questions.id]
-  id_game_question_answer uuid [not null, ref: > games_questions_answers.id]
+  id_match_user uuid [not null, ref: > matches_users.id]
+  id_match_question uuid [not null, ref: > matches_questions.id]
+  id_match_question_answer uuid [not null, ref: > matches_questions_answers.id]
   answered_at timestamp [default: "CURRENT_DATE"]
   status answer_status
 }
 
-Table games_history {
+Table matches_history {
   id uuid [pk]
-  description_game varchar(80)
+  description_match varchar(80)
   created_at timestamp [default: "CURRENT_DATE"]
-  type games_type
+  type matches_type
   difficulty difficulty
   number_of_players smallint
   number_of_questions smallint
@@ -127,9 +129,9 @@ Table games_history {
   ended_at timestamp
 }
 
-Table games_history_users {
+Table matches_history_users {
   id uuid [pk]
-  id_games_history uuid [not null, ref: > games_history.id]
+  id_matches_history uuid [not null, ref: > matches_history.id]
   id_user uuid [not null, ref: > users.id]
   number_of_correct_answers smallint
   score smallint

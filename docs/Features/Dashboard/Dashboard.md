@@ -9,134 +9,132 @@
 - navbar
 - user info
 - create / join / quick game button
-- list of pending games
+- list of available matches
 - footer
 
 ### Functionality
 
 - [ ] **On enter**
-	- SignalR -> Initialize listener to the event [[#^ffeabc|OnNewGameCreated]]
-	- SignalR -> Initialize listener to the event [[#^0fcaa9|OnPendingGamesUpdated]]
-	- SignalR -> invoke [[#^db6121|JoinDashboardGroup]]
-	- calls [[#^c84106|pending games]] to retrieve pending games to join
+	- SignalR -> invoke [[Methods#**JoinDashboard**|Join Dashboard]]
+	- SignalR -> Initialize listener to the event [[#^0fcaa9|OnAvailableMatchesUpdated]]
+	- retrieve available matches to join
+		- calls [[#^c84106|available matches]] to get matches
+		- apply deltas if there are any
+
+<!-- -->
 - [ ] **Page**
-	- [ ] **Create new game button**
-		- opens modal to create new game
+	- [ ] **Create new match button**
+		- opens modal to create new match
 			- **Fields**
-				- see [[#NewGameRequest]] DTO
+				- see [[#NewMatchRequest]] DTO
 			- **Actions**
-				- create button (calls [[#^a51427|create new game]])
+				- create button
+					- calls [[#^a51427|create new match]]
+					- 201 Created
+						- redirect user to lobby page "*lobby/{new_match_id}*"
 				- cancel buttons
 			- **Visuals feedback**
 				- show validation fields error message
 			- **Validations**
 				- validation for required fields
-			- **On Complete Actions**
-				- create button return 200 OK -> redirect to the lobby page
-					- path parameter: /{new_game_id}
-
 	- [ ] **Join by code button**
 		- insert code in a minimal form
 			- **Fields**
-				- see [[#JoinGameRequest]] DTO
+				- see [[#JoinMatchRequest]] DTO
 			- **Actions**
 				- join button
 					- retreive games by code ([[#^c84106|api/games]])
 					- calls [[#^937ced|api/games/{id}/join]]
+					- move returned match to *my matches list*
 			- **Visuals feedback**
 				- show validation fields error message
+				- not found error message
 			- **Validations**
 				- validation for required fields
-			- **On Complete Actions**
-				- join button return 200 OK -> redirect to the lobby page
-					- path parameter: /{new_game_id}
 
+<!-- -->
 - [ ] **SignalR Events**
-	- [ ] **OnNewGameCreated** ^ffeabc
-		- **Event Data**
-			- [[#OnNewGameResponse]]
-		- **Execution Flow**
-			- add new game to the list, ignore if already exists
-	- [ ] **OnPendingGamesUpdated** ^0fcaa9
+	- [ ] **OnAvailableMatchesUpdated** ^0fcaa9
 		- TODO
 
 ## BackEnd
 ---
-- [ ] **GET api/games**^c84106
+- [ ] **GET api/matches**^c84106
 	- **Response**
-		- [[#GameResponse - List]]
+		- List<[[#MatchResponse]]>
 	- **Execution Flow**
-		- MediatR -> DashboardHandler
-			- retrieve games from DB
+		- MediatR -> DashboardQuery
+			- retrieve matches from DB
+		- return response
 
-- [ ] **POST api/games** ^a51427
-	- **Request**
-		- [[#NewGameRequest]]
+<!-- -->
+- [ ] **POST api/matches** ^a51427
+	- **Request** ^f4f247
+		- [[#NewMatchRequest]]
 	- **Response**
-		- [[#NewGameResponse]]
+		- [[#MatchResponse]]
 	- **Execution Flow**
-		- MediatR -> DashboardHandler
-			- validate required fields
-			- create new game
-			- return ID new game
-		- SignalR -> invoke [[#^d6d92d|NotifyGameCreated]] ([[#OnNewGameCreatedEventData]])
+		- MediatR -> DashboardCommand
+			- validate required fields -> 400 Bad Request
+			- create new match
+			- NotifyService -> [[#^d6d92d|NotifyMatchesUpdated]]
+				- parameters
+					- [[#^f4f247|Response]]
+			- return [[#^f4f247|Response]]
+		- return 201 Created
 
-- [ ] **POST api/games/{id}/join** ^937ced
-	- **Request**
-		- [[#JoinGameRequest]]
-	- **Response**
-		- [[#JoinGameResponse]]
+<!-- -->
+- [ ] **POST api/matches/{id}/players** ^937ced
+	- **Response** ^f4f248
+		- [[#MatchResponse]]
 	- **Execution Flow**
 		- MediatR -> DashboardHandler
 			- validate required field
-			- game doesn't exists -> 404 Not Found, or is full -> 409 Conflict
+			- game doesn't exists -> 404 Not Found
+			- is full -> 409 Conflict
 			- join user to game (DB)
-		- SignalR -> invoke [[#^b03fb7|NotifyJoinedGame]] ([[#OnGameUpdatedEventData]])
+			- NotifyService -> [[#^d6d92d|NotifyMatchesUpdated]]
+				- parameters
+					- [[#^f4f248|Response]]
+			- return [[#^f4f248|Response]]
+		- return 200 OK
 
-- [ ] **SignalR Methods**
-	- [ ] **JoinDashboardGroup** ^db6121
-		- **Execution Flow**
-			- add user to the DashboardGroup
-
-	- [ ] **NotifyGameCreated** ^d6d92d
+<!-- -->
+- [ ] **Notify Service**
+	- [ ] **NotifyMatchesUpdated** ^d6d92d
 		- **Parameters**
 			- [[#OnNewGameCreatedEventData]]
 		- **Execution Flow**
 			- notify the dashboardGroup with new game data
 
-	- [ ] **NotifyJoinedGame** ^b03fb7
-		- **Parameters**
-			- [[#OnGameUpdatedEventData]]
-			- string ConnectionId
-		- **Execution Flow**
-			- remove user from dashboard group
-			- add user to game group
-			- notify dushboard group with updated data
-
 
 ## DTO
 ---
 
-### GameResponse - List
+### MatchResponse
 ```c#
-public class GameResponse
+public class MatchResponse
 {
 	public Guid Id;
 	public string Description;
 	public DateOnly CreatedAt;
 	public EDifficulty Difficulty;
+	public int NumberOfJoinedPlayer;
 	public int NumberOfPlayer;
+	public Guid[] ParticipantIds;
 	public int NumberOfQuestions;
 	public int AnswerTimeoutMinutes;
+	public EAction Action;
 }
 ```
 
-### NewGameRequest
+### NewMatchRequest
 ```c#
+public class NewMatchRequest
 {
 	public string? Description;
 	public EGameTypes Type;
-	public EDifficulty? Difficulty;
+	public EDifficulty Difficulty = EDifficulty.Progressive;
 	public string? Password;
 	public int? NumberOfPlayer = 2;
 	public int? NumberOfQuestions = 7;
@@ -144,47 +142,10 @@ public class GameResponse
 }
 ```
 
-### NewGameResponse
+### JoinMatchRequest
 ```c#
+public class JoinMatchRequest
 {
 	public Guid Id;
-}
-```
-
-### JoinGameRequest
-```c#
-public class JoinGameRequest
-{
-	public string ConnectionId;
-}
-```
-
-### JoinGameResponse
-```c#
-public class JoinGameResponse
-{
-	public Guid Id;
-}
-```
-
-### OnNewGameCreatedEventData
-```c#
-public class OnNewGameCreatedEventData
-{
-	public Guid Id;
-	public string Description;
-	public DateOnly CreatedAt;
-	public EDifficulty Difficulty;
-	public int NumberOfQuestions;
-	public int AnswerTimeoutMinutes;
-}
-```
-
-### OnGameUpdatedEventData
-```c#
-public class OnGameUpdatedEventData
-{
-	public Guid Id;
-	public int NumberOfPlayer;
 }
 ```
