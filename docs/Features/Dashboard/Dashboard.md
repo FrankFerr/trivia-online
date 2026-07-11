@@ -19,7 +19,7 @@
 	- SignalR -> Initialize listener to the event [[#^0fcaa9|OnAvailableMatchesUpdated]]
 	- retrieve available matches to join
 		- calls [[#^c84106|available matches]] to get matches
-		- apply deltas if there are any
+		- apply deltas if there are any [[#^e8b760|applyDelta]]
 
 <!-- -->
 - [ ] **Page**
@@ -43,19 +43,46 @@
 				- see [[#JoinMatchRequest]] DTO
 			- **Actions**
 				- join button
-					- retreive games by code ([[#^c84106|api/games]])
-					- calls [[#^937ced|api/games/{id}/join]]
+					- retreive games by code ([[#^c84106|api/matches]])
+					- calls [[#^937ced|api/matches/{id}/players]]
 					- move returned match to *my matches list*
 			- **Visuals feedback**
 				- show validation fields error message
 				- not found error message
 			- **Validations**
 				- validation for required fields
+	- [ ] **Random match button**
+		- **Actions**
+			- random match button
+				- calls [[#^937abc|api/matches/random/players]] -> \[404, 409]
+				- move returned match to *my matches list*
+		- **Visuals feedback**
+			- not found error message
+	- [ ] **Join by available match list button**
+		- **Fields**
+			- see [[#JoinMatchRequest]] DTO
+		- **Actions**
+			- join button
+				- calls [[#^937ced|api/matches/{id}/players]] -> \[404, 409]
+				- move returned match to *my matches list*
+		- **Visuals feedback**
+			- not found error message
 
 <!-- -->
 - [ ] **SignalR Events**
 	- [ ] **OnAvailableMatchesUpdated** ^0fcaa9
-		- TODO
+		- data synchronization by REST is active
+			- add delta match to a list
+			- return
+		- apply delta match to the list
+
+<!-- -->
+- [ ] **Methods**
+	- [ ] applyDelta ^e8b760
+		- **Parameters**
+			- [[#MatchResponse]]
+		- **Execution Flow**
+			- Add or remove match from the list based on Action
 
 ## BackEnd
 ---
@@ -81,7 +108,7 @@
 				- parameters
 					- [[#^f4f247|Response]]
 			- return [[#^f4f247|Response]]
-		- return 201 Created
+		- return 201 Created with response
 
 <!-- -->
 - [ ] **POST api/matches/{id}/players** ^937ced
@@ -90,13 +117,27 @@
 	- **Execution Flow**
 		- MediatR -> DashboardHandler
 			- validate required field
-			- game doesn't exists -> 404 Not Found
+			- match doesn't exists -> 404 Not Found
 			- is full -> 409 Conflict
-			- join user to game (DB)
+			- join user to match (DB)
 			- NotifyService -> [[#^d6d92d|NotifyMatchesUpdated]]
 				- parameters
 					- [[#^f4f248|Response]]
 			- return [[#^f4f248|Response]]
+		- return 200 OK
+
+<!-- -->
+- [ ] **POST api/matches/random/players** ^937abc
+	- **Response** ^f4f250
+		- [[#MatchResponse]]
+	- **Execution Flow**
+		- MediatR -> DashboardHandler
+			- match not found -> 404 Not Found
+			- join user to match (DB)
+			- NotifyService -> [[#^d6d92d|NotifyMatchesUpdated]]
+				- parameters
+					- [[#^f4f250|Response]]
+			- return [[#^f4f250|Response]]
 		- return 200 OK
 
 <!-- -->
