@@ -9,7 +9,8 @@
 - navbar
 - user info
 - create / join / quick game button
-- list of available matches
+- list of available matches and active matches
+	- Each active match is an expandable card with match information (host, waiting, your turn, finished)
 - footer
 
 ### Functionality
@@ -20,37 +21,40 @@
 	- retrieve available matches to join
 		- calls [[#^c84106|available matches]] to get matches
 		- apply deltas if there are any [[#^e8b760|applyDelta]]
+		- retrieve and cache details of joined matches
 
-<!-- -->
-- [ ] **Page**
+- [ ] **Page buttons**
 	- [ ] **Create new match button**
 		- opens modal to create new match
 			- **Fields**
-				- see [[#NewMatchRequest]] DTO
+				- see [[#NewMatchRequest]]
 			- **Actions**
 				- create button
 					- calls [[#^a51427|create new match]]
 					- 201 Created
+						- remove user from dashboard group [[Methods#**LeaveDashboard**|Leave dashboard]]
 						- redirect user to lobby page "*lobby/{new_match_id}*"
 				- cancel buttons
 			- **Visuals feedback**
 				- show validation fields error message
 			- **Validations**
 				- validation for required fields
+
 	- [ ] **Join by code button**
 		- insert code in a minimal form
 			- **Fields**
-				- see [[#JoinMatchRequest]] DTO
+				- see [[#JoinMatchRequest]]
 			- **Actions**
 				- join button
 					- retreive games by code ([[#^c84106|api/matches]])
-					- calls [[#^937ced|api/matches/{id}/players]]
+					- calls [[#^937ced|api/matches/{id}/players]] -> \[404, 409]
 					- move returned match to *my matches list*
 			- **Visuals feedback**
 				- show validation fields error message
 				- not found error message
 			- **Validations**
 				- validation for required fields
+
 	- [ ] **Random match button**
 		- **Actions**
 			- random match button
@@ -58,9 +62,10 @@
 				- move returned match to *my matches list*
 		- **Visuals feedback**
 			- not found error message
+
 	- [ ] **Join by available match list button**
 		- **Fields**
-			- see [[#JoinMatchRequest]] DTO
+			- see [[#JoinMatchRequest]]
 		- **Actions**
 			- join button
 				- calls [[#^937ced|api/matches/{id}/players]] -> \[404, 409]
@@ -68,15 +73,15 @@
 		- **Visuals feedback**
 			- not found error message
 
-<!-- -->
+- [ ] **Minimal Lobby buttons**
+
 - [ ] **SignalR Events**
 	- [ ] **OnAvailableMatchesUpdated** ^0fcaa9
 		- data synchronization by REST is active
 			- add delta match to a list
 			- return
-		- apply delta match to the list
+		- apply delta match to the list of available matches
 
-<!-- -->
 - [ ] **Methods**
 	- [ ] applyDelta ^e8b760
 		- **Parameters**
@@ -157,15 +162,43 @@
 public class MatchResponse
 {
 	public Guid Id;
-	public string Description;
-	public DateOnly CreatedAt;
-	public EDifficulty Difficulty;
-	public int NumberOfJoinedPlayer;
-	public int NumberOfPlayer;
-	public Guid[] ParticipantIds;
+	public string HostUsername;
+	public string CategoryDescription;
 	public int NumberOfQuestions;
 	public int AnswerTimeoutMinutes;
+	public int NumberOfJoinedPlayers;
+	public int NumberOfPlayers;
+	public DateOnly CreatedAt;
 	public EAction Action;
+}
+```
+
+### ActiveMatchResponse
+```c#
+public class ActiveMatchResponse
+{
+	public Guid Id;
+	public string Code;
+	public string HostUsername;
+	public bool IsHost;
+	public string CategoryDescription;
+	public int NumberOfQuestions;
+	public int NumberOfCurrentQuestion;
+	public int NumberOfCorrectAnswer;
+	public Participant[] Participants;
+	public int AnswerTimeoutMinutes;
+	public DateOnly CreatedAt;
+	public DateOnly EndedAt;
+}
+```
+
+### Participant
+```c#
+public class Participant
+{
+	public string Username;
+	public bool HasAnswered;
+	public int Score;
 }
 ```
 
