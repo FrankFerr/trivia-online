@@ -38,7 +38,7 @@
 					- calls [[#^a51427|create new match]]
 					- show match in active match list
 				- cancel buttons
-			- **Visuals feedback**
+			- **Visual feedback**
 				- show validation fields error message
 			- **Validations**
 				- validation for required fields
@@ -53,7 +53,7 @@
 					- calls [[#^937ced|api/matches/{matchId}/players]] -> \[404, 409]
 					- insert returned match to *my matches list*
 					- greyed out match from available list
-			- **Visuals feedback**
+			- **Visual feedback**
 				- show validation fields error message
 				- not found error message
 			- **Validations**
@@ -65,7 +65,7 @@
 				- calls [[#^937abc|api/matches/random/players]] -> \[404, 409]
 				- insert returned match to *my matches list*
 				- greyed out match from available list
-		- **Visuals feedback**
+		- **Visual feedback**
 			- not found error message
 
 	- [ ] **Join by available match list button**
@@ -74,16 +74,29 @@
 				- calls [[#^937ced|api/matches/{matchId}/players]] -> \[404, 409]
 				- insert returned match to *my matches list*
 				- greyed out match from available list
-		- **Visuals feedback**
+		- **Visual feedback**
 			- not found error message
 
 - [ ] **Card Lobby buttons**^b47e6a
 	- [ ] **Cancel match** *(Host only)*
-		- calls [[#^58e1fc|Delete endpoint]]
-		- remove match from list
+		- **Actions**
+			- calls [[#^58e1fc|Delete endpoint]]
+			- remove match from list
 
 	- [ ] **Start match** *(Host only)*
-		- TODO
+		- **Actions**
+			- calls *TODO*
+		- **Visual feedback**
+			- greyed out if there's one participants
+
+	- [ ] **Answer**
+		- *TODO*
+
+	- [ ] **Leave match**
+		- *TODO*
+
+	- [ ] **Abandon**
+		- *TODO*
 
 - [ ] **SignalR Events**
 	- [ ] **OnAvailableMatchesUpdated** ^0fcaa9
@@ -199,8 +212,10 @@
 
 	- [ ] **NotifyMatchJoined** ^d6d81C
 		- **Parameters**
-			- matchId
+			- matchId,
+			- list of userIds (optional)
 		- **Execution Flow**
+			- if list of userIds is null fetch them from DB
 			- notify the participants with active match data
 
 ## DTO
